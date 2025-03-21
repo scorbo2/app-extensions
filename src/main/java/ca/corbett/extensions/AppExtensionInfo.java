@@ -1,7 +1,8 @@
 package ca.corbett.extensions;
 
 import ca.corbett.extras.io.FileSystemUtil;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ import java.util.Objects;
  * @since 2023-11-11
  */
 public class AppExtensionInfo {
+
+    protected static Gson gson;
 
     protected final String name;
     protected final String version;
@@ -44,20 +47,41 @@ public class AppExtensionInfo {
         customFields = builder.customFields;
     }
 
+    public String toJson() {
+        return getGson().toJson(this);
+    }
+
     /**
-     * Attempts to parse an AppExtensionInfo instance out of data read from the given
+     * Attempts to parse an AppExtensionInfo out of the given json. Any field not mentioned in
+     * the json will be returned as null.
+     *
+     * @param json A json representation of an AppExtensionInfo object.
+     * @return An AppExtensionInfo object, or null if parsing was not possible.
+     */
+    public static AppExtensionInfo fromJson(String json) {
+        try {
+            return getGson().fromJson(json, AppExtensionInfo.class);
+        }
+        catch (RuntimeException ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Attempts to parse an AppExtensionInfo instance out of json read from the given
      * InputStream. Example usage in an extension:
      * <BLOCKQUOTE><PRE>
-     * AppExtensionInfo.fromStream(this.getClass().getClassLoader().getResourceAsStream("/path/extInfo"));
+     * AppExtensionInfo.fromStream(this.getClass().getClassLoader().getResourceAsStream("/path/extInfo.json"));
      * </PRE></BLOCKQUOTE>
      *
-     * @param stream An InputStream containing the String representation of an AppExtensionInfo instance.
+     * @param stream An InputStream containing json.
      * @return An AppExtensionInfo object, or null if parsing was not possible.
      */
     public static AppExtensionInfo fromStream(InputStream stream) {
         try {
-            return fromString(FileSystemUtil.readStreamToString(stream));
-        } catch (RuntimeException | IOException ignored) {
+            return fromJson(FileSystemUtil.readStreamToString(stream));
+        }
+        catch (RuntimeException | IOException ignored) {
             return null;
         }
     }
@@ -105,16 +129,6 @@ public class AppExtensionInfo {
 
     public String getCustomFieldValue(String fieldName) {
         return customFields == null ? null : customFields.get(fieldName);
-    }
-
-    public static AppExtensionInfo fromString(String input) {
-        // TODO deserialize
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString(); // TODO serialize
     }
 
     @Override
@@ -169,6 +183,13 @@ public class AppExtensionInfo {
             return false;
         }
         return Objects.equals(this.customFields, other.customFields);
+    }
+
+    protected static Gson getGson() {
+        if (gson == null) {
+            gson = new GsonBuilder().setPrettyPrinting().create();
+        }
+        return gson;
     }
 
     public static class Builder {

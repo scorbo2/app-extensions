@@ -287,7 +287,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
     }
 
     /**
-     * Scans the given directory looking for Jar files that contain an extInfo file, and
+     * Scans the given directory looking for Jar files that contain an extInfo.json file, and
      * if one is found, will check its parameters against the given appName and minimumVersion
      * to make sure the extension would work for that application. The return is a Map of
      * File to AppExtensionInfo, which can then be loaded via one of the loadExtension methods.
@@ -309,7 +309,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
         // Start by finding all jar files in the target directory:
         List<File> jarFiles = FileSystemUtil.findFiles(directory, true, "jar");
 
-        // Now try scanning for an extInfo file:
+        // Now try scanning for an extInfo.json file:
         for (File jarFile : jarFiles) {
             AppExtensionInfo extInfo = extractExtInfo(jarFile);
             if (extInfo == null) {
@@ -449,7 +449,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
     }
 
     /**
-     * Invoked internally to look for an extInfo file inside the given jar file and
+     * Invoked internally to look for an extInfo.json file inside the given jar file and
      * attempt to parse an AppExtensionInfo object out of it. Upon success, the newly
      * created AppExtensionInfo is returned. If anything goes wrong, the error is logged
      * and null is returned.
@@ -464,11 +464,11 @@ public abstract class ExtensionManager<T extends AppExtension> {
                 Enumeration<JarEntry> e = jar.entries();
                 while (e.hasMoreElements()) {
                     JarEntry entry = e.nextElement();
-                    if (!entry.isDirectory() && entry.getName().endsWith("extInfo")) {
+                    if (!entry.isDirectory() && entry.getName().endsWith("extInfo.json")) {
                         String data = FileSystemUtil.readStreamToString(jar.getInputStream(entry), "UTF-8");
-                        AppExtensionInfo extInfo = AppExtensionInfo.fromString(data);
+                        AppExtensionInfo extInfo = AppExtensionInfo.fromJson(data);
                         if (extInfo == null) {
-                            logger.log(Level.WARNING, "ExtensionManager.extractExtInfo: jar file {0} contains an invalid extInfo - skipping.", jarFile.getAbsolutePath());
+                            logger.log(Level.WARNING, "ExtensionManager.extractExtInfo: jar file {0} contains an invalid extInfo.json - skipping.", jarFile.getAbsolutePath());
                             return null;
                         }
                         return extInfo;
@@ -479,7 +479,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
             logger.log(Level.SEVERE, "ExtensionManager.extractExtInfo: unable to parse jar file " + jarFile.getAbsolutePath(), ioe);
         }
 
-        logger.log(Level.WARNING, "ExtensionManager.extractExtInfo: jar file {0} does not contain an extInfo file.", jarFile.getAbsolutePath());
+        logger.log(Level.WARNING, "ExtensionManager.extractExtInfo: jar file {0} does not contain an extInfo.json file.", jarFile.getAbsolutePath());
         return null;
     }
 
