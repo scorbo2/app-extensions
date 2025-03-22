@@ -193,14 +193,7 @@ public class ExtensionManagerPanel extends JPanel {
 
         // If we have at least one extension, select it:
         if (!extListModel.isEmpty()) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    extList.getSelectionModel().setSelectionInterval(0, 0);
-                }
-
-            });
-
+            SwingUtilities.invokeLater(() -> extList.getSelectionModel().setSelectionInterval(0, 0));
         }
 
         // Otherwise, show the empty panel:
@@ -218,13 +211,7 @@ public class ExtensionManagerPanel extends JPanel {
         JButton btn = new JButton("Enable all");
         btn.setPreferredSize(new Dimension(125, 23));
         containerPanel.add(btn);
-        btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setAllEnabled(true);
-            }
-
-        });
+        btn.addActionListener(e -> setAllEnabled(true));
         buttonPanel.add(containerPanel);
 
         containerPanel = new JPanel();
@@ -232,19 +219,13 @@ public class ExtensionManagerPanel extends JPanel {
         btn = new JButton("Disable all");
         btn.setPreferredSize(new Dimension(125, 23));
         containerPanel.add(btn);
-        btn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setAllEnabled(false);
-            }
-
-        });
+        btn.addActionListener(e -> setAllEnabled(false));
         buttonPanel.add(containerPanel);
 
         return buttonPanel;
     }
 
-    protected class AppExtensionPlaceholder {
+    protected static class AppExtensionPlaceholder {
 
         protected final AppExtension extension;
         protected String name;
@@ -290,14 +271,18 @@ public class ExtensionManagerPanel extends JPanel {
 
     }
 
-    protected class ExtensionListRenderer extends JLabel implements ListCellRenderer<AppExtensionPlaceholder> {
+    /**
+     * TODO I don't remember why this is needed...
+     *      I think I just wanted to make disabled extensions visually more obvious?
+     */
+    protected static class ExtensionListRenderer extends JLabel implements ListCellRenderer<AppExtensionPlaceholder> {
 
         @Override
         public Component getListCellRendererComponent(JList<? extends AppExtensionPlaceholder> list, AppExtensionPlaceholder value, int index, boolean isSelected, boolean cellHasFocus) {
             setText(value.toString());
             setOpaque(true);
             if (value.isEnabled) {
-                setFont(new Font("Serif", 0, 14));
+                setFont(new Font("Serif", Font.PLAIN, 14));
                 setForeground(isSelected ? Color.WHITE : Color.BLACK);
                 setBackground(isSelected ? Color.BLUE : Color.WHITE);
             } else {
@@ -307,6 +292,5 @@ public class ExtensionManagerPanel extends JPanel {
             }
             return this;
         }
-
     }
 }

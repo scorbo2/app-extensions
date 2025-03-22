@@ -23,7 +23,8 @@ public interface AppExtension {
     public AppExtensionInfo getInfo();
 
     /**
-     * Return a list of configuration properties for this extension. An empty/null list is fine.
+     * Return a list of configuration properties for this extension. An empty/null list is fine,
+     * if the extension has no configuration properties. 
      *
      * @return A List of 0 or more configuration properties for this extension, or null.
      */

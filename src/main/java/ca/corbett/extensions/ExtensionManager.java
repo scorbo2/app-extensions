@@ -23,6 +23,13 @@ import java.util.logging.Logger;
  * for any given application. Extend this class with your specific implementation type
  * of AppExtension and then point it to a directory containing jar files that
  * provide implementations of that class.
+ * <p>
+ *     Your extension should bundle all required code and resources into a jar file,
+ *     and include an extInfo.json file in the jar resources. We scan for that
+ *     file in this class and parse it out to see if a) it exists, and b) if the
+ *     version requirements in the candidate extension jar are met. See extractExtInfo
+ *     for more details.
+ * </p>
  *
  * @param <T> Any class that implements AppExtension - this is the class we'll scan for.
  * @author scorbo2
@@ -198,7 +205,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
      * extension load order matters! If you are supplying built-in extensions, it's probably
      * better to invoke this before you load extensions from jar files on disk. This is so that
      * getAllExtensionProperties can work as intended - i.e. extensions have the ability to
-     * overwrite config properties from earlier-loaed extensions.
+     * overwrite config properties from earlier-loaded extensions.
      * <p>
      * The extension will not receive an onActivate() notification from this method.
      * Use activateAll() to start up extensions.
@@ -318,32 +325,6 @@ public abstract class ExtensionManager<T extends AppExtension> {
             if (jarFileMeetsRequirements(jarFile, extInfo, appName, minimumVersion)) {
                 map.put(jarFile, extInfo);
             }
-
-            // Check app name if one was given:
-            if (appName != null && !appName.equals(extInfo.getTargetAppName())) {
-                logger.log(Level.WARNING,
-                        "findCandidateExtensionJars: skipping jar {0} because target app name \"{1}\" does not match given app name \"{2}\".",
-                        new Object[]{jarFile.getAbsolutePath(), extInfo.getTargetAppName(), appName});
-                continue;
-            }
-
-            // Check minimum app version if one was given:
-            if (minimumVersion != null) {
-                try {
-                    float minVersion = Float.valueOf(minimumVersion);
-                    float extRequires = extInfo.getTargetAppVersion() == null ? -1 : Float.valueOf(extInfo.getTargetAppVersion());
-                    if (extRequires < minVersion) {
-                        logger.log(Level.WARNING, "findCandidateExtensionJars: Jar file {0} contains an older extension with version {1}, below the required version of {2}; skipping.",
-                                new Object[]{jarFile.getAbsolutePath(), extInfo.getTargetAppVersion(), minimumVersion});
-                        continue;
-                    }
-                } catch (NumberFormatException nfe) {
-                    logger.log(Level.WARNING, "findCandidateExtensionJars: unable to parse version information for jar file {0}: App version: \"{1}\", extension targets version \"{2}\".",
-                            new Object[]{jarFile.getAbsolutePath(), minimumVersion, extInfo.getTargetAppVersion()});
-                }
-
-                // If it passes the above checks, add it to the returned map:
-            }
         }
 
         return map;
@@ -386,13 +367,15 @@ public abstract class ExtensionManager<T extends AppExtension> {
                 return false;
             }
         }
+
         return true;
     }
 
     /**
      * Scans the given jar file looking for any classes that matches T. The first matching
      * class found will be loaded as an extension of type T and returned. Multiple extension
-     * implementations in the same jar file is therefore not supported.
+     * implementations in the same jar file is therefore not supported - package them into
+     * separate jar files instead.
      *
      * @param jarFile        The jar file to scan.
      * @param extensionClass The implementing class to look for.
@@ -403,39 +386,40 @@ public abstract class ExtensionManager<T extends AppExtension> {
             try (JarFile jar = new JarFile(jarFile.getAbsolutePath())) {
                 Enumeration<JarEntry> e = jar.entries();
                 URL[] urls = {new URL("jar:file:" + jarFile.getAbsolutePath() + "!/")};
-                URLClassLoader cl = URLClassLoader.newInstance(urls);
+                try (URLClassLoader cl = URLClassLoader.newInstance(urls)) {
 
-                while (e.hasMoreElements()) {
-                    JarEntry je = e.nextElement();
-                    if (je.isDirectory() || !je.getName().endsWith(".class")) {
-                        continue;
-                    }
-                    // -6 because of .class
-                    String className = je.getName().substring(0, je.getName().length() - 6);
-                    className = className.replace('/', '.');
+                    while (e.hasMoreElements()) {
+                        JarEntry je = e.nextElement();
+                        if (je.isDirectory() || !je.getName().endsWith(".class")) {
+                            continue;
+                        }
+                        // -6 because of .class
+                        String className = je.getName().substring(0, je.getName().length() - 6);
+                        className = className.replace('/', '.');
 
-                    // Check to make sure we don't already have one with this class name:
-                    if (getLoadedExtension(className) != null) {
-                        logger.log(Level.INFO, "Skipping already loaded extension: {0}", className);
-                        continue;
-                    }
+                        // Check to make sure we don't already have one with this class name:
+                        if (getLoadedExtension(className) != null) {
+                            logger.log(Level.INFO, "Skipping already loaded extension: {0}", className);
+                            continue;
+                        }
 
-                    // Load this class:
-                    Class candidate = cl.loadClass(className);
+                        // Load this class:
+                        Class candidate = cl.loadClass(className);
 
-                    // What I want to do:
-                    //    if (T.isAssignableFrom(candidate))
-                    // or:
-                    //    if (candidate instanceof T)
-                    // But these are both illegal in Java because of type erasure.
-                    // T is just a compile-time convenience and it is discarded at runtime.
-                    // So, we have to force callers to pass in the class even though we're already
-                    // typed with it, sigh.
-                    if (extensionClass.isAssignableFrom(candidate)) {
-                        logger.log(Level.FINE, "Found qualifying AppExtension class: {0} in jar: {1}",
-                                new Object[]{candidate.getCanonicalName(),
-                                        jarFile.getAbsolutePath()});
-                        return (T) candidate.newInstance();
+                        // What I want to do:
+                        //    if (T.isAssignableFrom(candidate))
+                        // or:
+                        //    if (candidate instanceof T)
+                        // But these are both illegal in Java because of type erasure.
+                        // T is just a compile-time convenience and it is discarded at runtime.
+                        // So, we have to force callers to pass in the class even though we're already
+                        // typed with it, sigh.
+                        if (extensionClass.isAssignableFrom(candidate)) {
+                            logger.log(Level.FINE, "Found qualifying AppExtension class: {0} in jar: {1}",
+                                    new Object[]{candidate.getCanonicalName(),
+                                            jarFile.getAbsolutePath()});
+                            return (T) candidate.newInstance();
+                        }
                     }
                 }
             }
@@ -453,6 +437,17 @@ public abstract class ExtensionManager<T extends AppExtension> {
      * attempt to parse an AppExtensionInfo object out of it. Upon success, the newly
      * created AppExtensionInfo is returned. If anything goes wrong, the error is logged
      * and null is returned.
+     * <p>
+     *     <b>Packaging an extInfo.json file into your extension jar</b><br>
+     *     Your jar file should contain an extInfo.json file somewhere in its resources.
+     *     We'll scan every entry in the jar file looking for it, so the exact location
+     *     doesn't matter, but a good convention is:
+     *     resources/fully/qualified/main/package/extInfo.json
+     * </p>
+     * <p>
+     *     You can easily generate an extInfo.json by populating an AppExtensionInfo
+     *     object and invoking toJson() on it.
+     * </p>
      *
      * @param jarFile The jar file in question.
      * @return An AppExtensionInfo, or null.
@@ -495,6 +490,10 @@ public abstract class ExtensionManager<T extends AppExtension> {
         return wrapperList;
     }
 
+    /**
+     * This is used internally to combine a source jar file, the extension that it contained, and
+     * an isEnabled status flag into one handy location. It's never exposed to client code.
+     */
     protected class ExtensionWrapper implements Comparable<ExtensionWrapper> {
 
         boolean isEnabled;

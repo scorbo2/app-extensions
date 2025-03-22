@@ -12,7 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class encapulates a PropertiesManager and an ExtensionManager together into
+ * This class encapsulates a PropertiesManager and an ExtensionManager together into
  * one handy utility that client projects can use more easily than the old approach
  * of having the client projects maintain these things separately.
  * <p>
@@ -53,6 +53,13 @@ public abstract class AppProperties {
      * If your application has no ExtensionManager, you can construct an AppPreferences
      * instance by simply supplying your application name (used in dialog titles and
      * as a header in the props file) along with the props file itself.
+     * <p>
+     *     TODO this seems goofy to me. If an application has no ExtensionManager,
+     *     why would they use this class? They could just use PropertiesManager
+     *     directly without this wrapper. This class only exists to bring those
+     *     two classes, ExtensionManager and PropertiesManager, together into
+     *     one convenient wrapper class. I think this constructor should be nuked.
+     * </p>
      *
      * @param appName   The name of this application.
      * @param propsFile A File in which properties will be stored for this application.
@@ -145,7 +152,7 @@ public abstract class AppProperties {
      * Note: enabled status is stored in the ExtensionManager as well as here. In the case
      * of a discrepancy, the ExtensionManager will be considered the source of truth. That means
      * that this method might have the side effect of enabling/disabling an extension here
-     * in AppPreferences if we check and find that ExtensionManager's answer doesn't match ours.
+     * in AppProperties if we check and find that ExtensionManager's answer doesn't match ours.
      *
      * @param extName      The class name of the extension to check.
      * @param defaultValue A value to return if the status can't be found.

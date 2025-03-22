@@ -17,19 +17,22 @@ import javax.swing.JPanel;
 import javax.swing.border.BevelBorder;
 
 /**
- * Provides a standardized way of viewing and enabling extensions across applications.Basically
- * wraps an ExtensionManagerPanel and provides facilities for auto-committing
+ * Provides a standardized way of viewing and enabling extensions across applications.
+ * Basically wraps an ExtensionManagerPanel and provides facilities for auto-committing
  * changes directly to the given ExtensionManager.
+ * <p>
  * If you don't want a popup dialog,
  * but would rather embed the UI onto some existing screen, use ExtensionManagerPanel
  * directly, but be aware you have to commit the resulting changes (enabling or disabling
  * of extensions).
+ * </p>
  * <p>
  * By default, this dialog will auto-commit any changes to extension enabled status made
  * by the user. This happens when the dialog is okayed. You can prevent this behaviour
  * via setAutoCommit(false), if you'd rather handle the enabling or disabling of
  * extensions yourself. Use isExtensionEnabled() in this class to determine if the
  * user enabled or disabled a given extension.
+ * </p>
  *
  * @param <T> Any implementation of AppExtension
  * @author scorbo2
@@ -181,23 +184,11 @@ public class ExtensionManagerDialog<T extends AppExtension> extends JDialog {
         panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
         JButton button = new JButton("OK");
         button.setPreferredSize(new Dimension(90, 24));
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                okay();
-            }
-
-        });
+        button.addActionListener(e -> okay());
         panel.add(button);
         button = new JButton("Cancel");
         button.setPreferredSize(new Dimension(90, 24));
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-
-        });
+        button.addActionListener(e -> dispose());
         panel.add(button);
         panel.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
         return panel;

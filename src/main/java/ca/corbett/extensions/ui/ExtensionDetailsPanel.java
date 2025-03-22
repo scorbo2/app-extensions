@@ -187,6 +187,14 @@ public class ExtensionDetailsPanel extends JPanel {
 
     }
 
+    /**
+     * TODO this is a goofy holdover from sc-util and should probably be removed or at least
+     * adjusted. The concept of a "system extension" versus a "user extension" will probably
+     * no longer exist. I do like the idea of differentiating user-supplied (i.e. loaded
+     * from a jar file) extensions versus built-in (loaded by the application itself) ones though.
+     *
+     * @return A String describing the type of extension: System, User, or Application built-in.
+     */
     protected String determineExtensionType() {
         if (extension == null) {
             return "";

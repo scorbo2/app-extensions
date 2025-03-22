@@ -16,7 +16,10 @@ import java.util.Objects;
  * Name, version, targetAppName, and targetAppVersion should be considered
  * mandatory, with the remaining fields being optional. Extra application-specific
  * fields can be thrown into the custom field map, but you are restricted
- * to simple single-line string values.
+ * to simple single-line string values. Every extension should package
+ * an extInfo.json file as a resource into its jar file so that it can
+ * be discovered and interrogated by ExtensionManager. See ExtensionManager.extractExtInfo()
+ * for more.
  *
  * @author scorbo2
  * @since 2023-11-11
