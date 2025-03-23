@@ -1,5 +1,6 @@
 package ca.corbett.extensions;
 
+import ca.corbett.extensions.ui.ExtensionManagerDialog;
 import ca.corbett.extras.properties.AbstractProperty;
 import ca.corbett.extras.properties.PropertiesDialog;
 import ca.corbett.extras.properties.PropertiesManager;
@@ -39,34 +40,15 @@ import java.util.logging.Logger;
  * @author scorbo2
  * @since 2024-12-30
  */
-public abstract class AppProperties {
+public abstract class AppProperties<T extends AppExtension> {
 
     private static final Logger logger = Logger.getLogger(AppProperties.class.getName());
 
     protected final PropertiesManager propsManager;
-    protected final ExtensionManager extManager;
+    protected final ExtensionManager<T> extManager;
 
     private final String appName;
     private final File propsFile;
-
-    /**
-     * If your application has no ExtensionManager, you can construct an AppPreferences
-     * instance by simply supplying your application name (used in dialog titles and
-     * as a header in the props file) along with the props file itself.
-     * <p>
-     *     TODO this seems goofy to me. If an application has no ExtensionManager,
-     *     why would they use this class? They could just use PropertiesManager
-     *     directly without this wrapper. This class only exists to bring those
-     *     two classes, ExtensionManager and PropertiesManager, together into
-     *     one convenient wrapper class. I think this constructor should be nuked.
-     * </p>
-     *
-     * @param appName   The name of this application.
-     * @param propsFile A File in which properties will be stored for this application.
-     */
-    protected AppProperties(String appName, File propsFile) {
-        this(appName, propsFile, null);
-    }
 
     /**
      * If your application has an ExtensionManager, you can supply it here and this
@@ -74,9 +56,9 @@ public abstract class AppProperties {
      *
      * @param appName    The name of this application.
      * @param propsFile  A File in which properties will be stored for this application.
-     * @param extManager An optional ExtensionManager (can be null).
+     * @param extManager An instance of your ExtensionManager implementation.
      */
-    protected AppProperties(String appName, File propsFile, ExtensionManager extManager) {
+    protected AppProperties(String appName, File propsFile, ExtensionManager<T> extManager) {
         this.appName = appName;
         this.propsFile = propsFile;
         this.extManager = extManager;
@@ -96,23 +78,19 @@ public abstract class AppProperties {
         }
 
         // Now that we have loaded all props, figure out which extensions should be enabled/disabled:
-        if (extManager != null) {
-            for (Object ext : extManager.getAllLoadedExtensions()) {
-                AppExtension extension = (AppExtension) ext;
+        for (T extension : extManager.getAllLoadedExtensions()) {
+            // Note we don't call isExtensionEnabled here because this is the one spot where we
+            // don't care what ExtensionManager has to say on the subject... we only care
+            // if the extension is disabled in our properties list, and we'll tell
+            // ExtensionManager whether or not it's enabled.
+            boolean isEnabled = propsManager.getPropertiesInstance().getBoolean("extension.enabled." + extension.getClass().getName(), true);
+            extManager.setExtensionEnabled(extension.getClass().getName(), isEnabled, false);
 
-                // Note we don't call isExtensionEnabled here because this is the one spot where we
-                // don't care what ExtensionManager has to say on the subject... we only care
-                // if the extension is disabled in our properties list, and we'll tell
-                // ExtensionManager whether or not it's enabled.
-                boolean isEnabled = propsManager.getPropertiesInstance().getBoolean("extension.enabled." + extension.getClass().getName(), true);
-                extManager.setExtensionEnabled(extension.getClass().getName(), isEnabled, false);
-
-                // Also enable or disable any properties for this extension:
-                List<AbstractProperty> disabledProps = extension.getConfigProperties();
-                for (AbstractProperty prop : disabledProps) {
-                    if (propsManager.getProperty(prop.getFullyQualifiedName()) != null) {
-                        propsManager.getProperty(prop.getFullyQualifiedName()).setEnabled(isEnabled);
-                    }
+            // Also enable or disable any properties for this extension:
+            List<AbstractProperty> disabledProps = extension.getConfigProperties();
+            for (AbstractProperty prop : disabledProps) {
+                if (propsManager.getProperty(prop.getFullyQualifiedName()) != null) {
+                    propsManager.getProperty(prop.getFullyQualifiedName()).setEnabled(isEnabled);
                 }
             }
         }
@@ -134,7 +112,7 @@ public abstract class AppProperties {
      *
      * @param owner The owning Frame (so we can make the dialog modal to that Frame).
      */
-    public void showDialog(Frame owner) {
+    public void showPropertiesDialog(Frame owner) {
         reconcileExtensionEnabledStatus();
         PropertiesDialog dialog = propsManager.generateDialog(owner, appName + " properties", true, 24);
         dialog.setVisible(true);
@@ -142,6 +120,22 @@ public abstract class AppProperties {
         if (dialog.wasOkayed()) {
             save();
         }
+    }
+
+    /**
+     * Generates and shows an ExtensionManagerDialog to allow the user to view all
+     * currently loaded extensions, and to enable or disable them.
+     *
+     * @param owner The owning Frame (so we can make the dialog modal to that Frame).
+     * @return true if the user OK'd the dialog and changes were made - reload your UI!
+     */
+    public boolean showExtensionDialog(Frame owner) {
+        ExtensionManagerDialog<T> dialog = new ExtensionManagerDialog<>(extManager, owner);
+        dialog.setVisible(true);
+        if (dialog.wasOkayed() && dialog.wasModified()) {
+            save();
+        }
+        return dialog.wasOkayed() && dialog.wasModified();
     }
 
     /**
@@ -161,14 +155,12 @@ public abstract class AppProperties {
     public boolean isExtensionEnabled(String extName, boolean defaultValue) {
         boolean enabledInProps = propsManager.getPropertiesInstance().getBoolean("extension.enabled." + extName, defaultValue);
 
-        if (extManager != null) {
-            boolean isActuallyEnabled = extManager.isExtensionEnabled(extName);
+        boolean isActuallyEnabled = extManager.isExtensionEnabled(extName);
 
-            // If extManager has a different opinion than we do, update ourselves:
-            if (enabledInProps != isActuallyEnabled) {
-                propsManager.getPropertiesInstance().setBoolean("extension.enabled." + extName, isActuallyEnabled);
-                enabledInProps = isActuallyEnabled;
-            }
+        // If extManager has a different opinion than we do, update ourselves:
+        if (enabledInProps != isActuallyEnabled) {
+            propsManager.getPropertiesInstance().setBoolean("extension.enabled." + extName, isActuallyEnabled);
+            enabledInProps = isActuallyEnabled;
         }
 
         return enabledInProps;
@@ -185,9 +177,7 @@ public abstract class AppProperties {
         propsManager.getPropertiesInstance().setBoolean("extension.enabled." + extName, value);
 
         // Also notify ExtensionManager about this change:
-        if (extManager != null) {
-            extManager.setExtensionEnabled(extName, value);
-        }
+        extManager.setExtensionEnabled(extName, value);
     }
 
     /**
@@ -204,18 +194,14 @@ public abstract class AppProperties {
      * @return A configured PropertiesManager.
      */
     private PropertiesManager createPropertiesManager() {
-        List<AbstractProperty> props = new ArrayList<>();
-        props.addAll(createInternalProperties());
+        List<AbstractProperty> props = new ArrayList<>(createInternalProperties());
 
         // The name of this method is misleading, because ALL extensions are enabled by default.
         // But that's okay. We'll load all properties for all extensions, and then the load()
         // method can handling disabling extensions and hiding properties for those extensions.
-        if (extManager != null) {
-            props.addAll(extManager.getAllEnabledExtensionProperties());
-        }
-        PropertiesManager manager = new PropertiesManager(propsFile, props, appName + " application properties");
+        props.addAll(extManager.getAllEnabledExtensionProperties());
 
-        return manager;
+        return new PropertiesManager(propsFile, props, appName + " application properties");
     }
 
     /**
@@ -232,15 +218,10 @@ public abstract class AppProperties {
      * method in this class. Either way, this class will keep itself in sync with ExtensionManager.
      */
     private void reconcileExtensionEnabledStatus() {
-        if (extManager == null) {
-            return;
-        }
-
         // Loop through all extensions and use our isExtensionEnabled method to
         // pull the current enabled stats from extManager. Yeah, methods starting
         // with "is" probably shouldn't have side effects like this, but meh.
-        for (Object ext : extManager.getAllLoadedExtensions()) {
-            AppExtension extension = (AppExtension) ext;
+        for (T extension : extManager.getAllLoadedExtensions()) {
             boolean isEnabled = isExtensionEnabled(extension.getClass().getName(), false);
 
             // Also set the enabled status of each extension property:
