@@ -194,7 +194,7 @@ our edit menu:
 
 ```java
 private JMenu buildImageEditMenu() {
-    JMenu menu = new JMenu("Image edit");
+    JMenu menu = new JMenu("Edit");
     
     // Add the ones we know about natively:
     menu.add(new JMenuItem(imageRotateAction));
@@ -410,6 +410,8 @@ we see that our extension's properties have been added to a new tab:
 
 And we didn't have to write any UI code at all to support this! 
 
+### Using AppProperties to combine PropertiesManager and ExtensionManager
+
 To make things just a little bit easier, `app-extensions` also includes a
 wrapper class `AppProperties`, which combines a custom `ExtensionManager` 
 together with a `PropertiesManager` instance. This allows those two classes
@@ -452,21 +454,28 @@ There are convenience methods in `AppProperties` that make generating and showin
 the properties dialog and the extension manager dialog very simple:
 
 ```java
-// Show the extension manager:
-myAppProps.showExtensionDialog(MainWindow.getInstance());
-
 // Show the application properties dialog:
 myAppProps.showPropertiesDialog(MainWindow.getInstance());
+
+// Show the extension manager:
+if (myAppProps.showExtensionDialog(MainWindow.getInstance())) {
+    // User okayed the dialog with changes...
+    // That means we have to reload our UI to show/hide controls as needed!
+}
 ```
 
-Great! Now our application code doesn't need to worry about all the UI code
-and configuration persistence code for all this... it just works!
+Great! Having the configuration properties managed by `PropertiesManager` and the
+extension enabled/disabled status managed by `ExtensionManager` makes our code so
+much easier. Combining those two classes together into a custom `AppProperties` class
+makes it even easier!
 
 ## Where to from here?
 
 This README has covered the basics of writing an extension for an application
 and loading it dynamically. This library is deceptively powerful, and allows you to
 write extremely extensible code relatively easily without a lot of UI headaches.
+I have used it in several applications to great effect.
+
 Refer also to the library's javadocs for more detailed usage information!
 
 ## License
