@@ -485,3 +485,7 @@ Refer also to the library's javadocs for more detailed usage information!
 ## Revision history
 
 `app-extensions` was written late in 2023 and was published on github in 2025.
+
+- v1.9.1 [2025-03-26]
+  - Upgrade to `swing-extras` 1.9.1 to pick up changes there
+  - `AppProperties.showPropertiesDialog` now returns whether user OK'd the dialog
