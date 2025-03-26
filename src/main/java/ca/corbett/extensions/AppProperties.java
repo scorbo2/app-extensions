@@ -111,8 +111,9 @@ public abstract class AppProperties<T extends AppExtension> {
      * of the current properties. If the user okays the dialog, changes are automatically saved.
      *
      * @param owner The owning Frame (so we can make the dialog modal to that Frame).
+     * @return true if the user OK'd the dialog and changes were made - reload your UI!
      */
-    public void showPropertiesDialog(Frame owner) {
+    public boolean showPropertiesDialog(Frame owner) {
         reconcileExtensionEnabledStatus();
         PropertiesDialog dialog = propsManager.generateDialog(owner, appName + " properties", true, 24);
         dialog.setVisible(true);
@@ -120,6 +121,8 @@ public abstract class AppProperties<T extends AppExtension> {
         if (dialog.wasOkayed()) {
             save();
         }
+
+        return dialog.wasOkayed();
     }
 
     /**
