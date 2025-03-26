@@ -6,7 +6,7 @@
 
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.0</version>
+    <version>1.9.1</version>
 
     <name>app-extensions</name>
     <description>App Extensions - create dynamic extensions for Java applications</description>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>ca.corbett</groupId>
             <artifactId>swing-extras</artifactId>
-            <version>1.9.0</version>
+            <version>1.9.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>RELEASE</version>
+            <version>5.12.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
