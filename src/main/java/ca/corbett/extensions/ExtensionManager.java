@@ -267,11 +267,12 @@ public abstract class ExtensionManager<T extends AppExtension> {
      * @param extClass       The implementation class to look for.
      * @param appName        The application name to match against.
      * @param minimumVersion The minimum application version that the extension must target.
+     * @return The count of extensions that were loaded by this operation.
      */
-    public void loadExtensions(File directory, Class<T> extClass, String appName, String minimumVersion) {
+    public int loadExtensions(File directory, Class<T> extClass, String appName, String minimumVersion) {
         Map<File, AppExtensionInfo> map = findCandidateExtensionJars(directory, appName, minimumVersion);
         if (map.isEmpty()) {
-            return;
+            return 0;
         }
         List<File> jarList = new ArrayList<>(map.keySet());
         jarList.sort(new Comparator<File>() {
@@ -281,6 +282,7 @@ public abstract class ExtensionManager<T extends AppExtension> {
             }
 
         });
+        int extensionsLoaded = 0;
         for (File jarFile : jarList) {
             T extension = loadExtensionFromJar(jarFile, extClass);
             if (extension != null) {
@@ -289,8 +291,10 @@ public abstract class ExtensionManager<T extends AppExtension> {
                 wrapper.extension = extension;
                 wrapper.isEnabled = true;
                 loadedExtensions.put(extension.getClass().getName(), wrapper);
+                extensionsLoaded++;
             }
         }
+        return extensionsLoaded;
     }
 
     /**
