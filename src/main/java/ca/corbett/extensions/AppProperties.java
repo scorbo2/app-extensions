@@ -239,8 +239,6 @@ public abstract class AppProperties<T extends AppExtension> {
      *     (And, of course, to reload your UI, as there may be many other changes
      *     throughout your app as a result of enabling or disabling extensions).
      * </p>
-     *
-     * @return A configured PropertiesManager.
      */
     public void reinitialize() {
         List<AbstractProperty> props = new ArrayList<>(createInternalProperties());
