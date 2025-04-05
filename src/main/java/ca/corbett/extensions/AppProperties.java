@@ -4,6 +4,7 @@ import ca.corbett.extensions.ui.ExtensionManagerDialog;
 import ca.corbett.extras.properties.AbstractProperty;
 import ca.corbett.extras.properties.PropertiesDialog;
 import ca.corbett.extras.properties.PropertiesManager;
+import ca.corbett.forms.FormPanel;
 
 import java.awt.Frame;
 import java.io.File;
@@ -114,8 +115,20 @@ public abstract class AppProperties<T extends AppExtension> {
      * @return true if the user OK'd the dialog and changes were made - reload your UI!
      */
     public boolean showPropertiesDialog(Frame owner) {
+        return showPropertiesDialog(owner, FormPanel.Alignment.TOP_LEFT);
+    }
+
+    /**
+     * Generates and shows a PropertiesDialog to allow the user to view or change any
+     * of the current properties. If the user okays the dialog, changes are automatically saved.
+     *
+     * @param owner The owning Frame (so we can make the dialog modal to that Frame).
+     * @param alignment How the FormPanels should align themselves.
+     * @return true if the user OK'd the dialog and changes were made - reload your UI!
+     */
+    public boolean showPropertiesDialog(Frame owner, FormPanel.Alignment alignment) {
         reconcileExtensionEnabledStatus();
-        PropertiesDialog dialog = propsManager.generateDialog(owner, appName + " properties", true, 24);
+        PropertiesDialog dialog = propsManager.generateDialog(owner, appName + " properties", alignment, 24);
         dialog.setVisible(true);
 
         if (dialog.wasOkayed()) {

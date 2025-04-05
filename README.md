@@ -34,7 +34,7 @@ If you're using Maven, you can just add it as a dependency:
   <dependency>
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.0</version>
+    <version>1.9.2</version>
   </dependency>
 </dependencies>
 ```
