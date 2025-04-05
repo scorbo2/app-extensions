@@ -252,6 +252,53 @@ public abstract class ExtensionManager<T extends AppExtension> {
     }
 
     /**
+     * Removes all extensions that were previously loaded in this ExtensionManager,
+     * and returns it to an empty state. Client applications
+     * should use this with caution - if you have queried for configuration properties
+     * from all extensions before invoking this, then you should once again invoke
+     * getAllEnabledExtensionProperties() because the list of properties will
+     * likely decrease as extensions are unloaded, and your UI should remove the properties
+     * that no longer exist.
+     *
+     * @return The count of extensions that were actually removed as a result of this call.
+     */
+    public int unloadAllExtensions() {
+        List<String> extensionClasses = new ArrayList<>(loadedExtensions.keySet());
+        int removedCount = 0;
+        for (String extensionClass : extensionClasses) {
+            if (unloadExtension(extensionClass)) {
+                removedCount++;
+            }
+        }
+        return removedCount;
+    }
+
+    /**
+     * Unregisters the given extension, if it was registered. The extension will receive a
+     * deactivate() message before it is unloaded, if it was enabled. Client applications
+     * should use this with caution - if you have queried for configuration properties
+     * from all extensions before invoking this, then you should once again invoke
+     * getAllEnabledExtensionProperties() because the list of properties will
+     * likely decrease as extensions are unloaded, and your UI should remove the properties
+     * that no longer exist.
+     *
+     * @param className The class of the extension to be unregistered.
+     * @return true if an extension was actually removed as a result of this call.
+     */
+    public boolean unloadExtension(String className) {
+       ExtensionWrapper wrapper = loadedExtensions.get(className);
+       boolean removedSomething = false;
+       if (wrapper != null) {
+           if (wrapper.extension != null && wrapper.isEnabled) {
+               wrapper.extension.onDeactivate();
+           }
+           loadedExtensions.remove(className);
+           removedSomething = true;
+       }
+       return removedSomething;
+    }
+
+    /**
      * Scans the given directory looking for candidate jar files that contain an extension matching
      * the given parameters. For each jar that is found, an attempt will be made to load the
      * extension class out of that jar file. All successfully loaded extension classes will
