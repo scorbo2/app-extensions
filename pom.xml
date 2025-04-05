@@ -6,7 +6,7 @@
 
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.1</version>
+    <version>1.9.2</version>
 
     <name>app-extensions</name>
     <description>App Extensions - create dynamic extensions for Java applications</description>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>ca.corbett</groupId>
             <artifactId>swing-extras</artifactId>
-            <version>1.9.1</version>
+            <version>1.9.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -99,6 +99,14 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <!-- Javadoc warnings need to chill out a lot -->
+                    <additionalOptions>-Xdoclint:all -Xdoclint:-missing</additionalOptions>
+                    <additionalJOptions>
+                        <additionalJOption>-Xdoclint:all</additionalJOption>
+                        <additionalJOption>-Xdoclint:-missing</additionalJOption>
+                    </additionalJOptions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

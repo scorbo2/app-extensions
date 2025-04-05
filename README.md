@@ -34,7 +34,7 @@ If you're using Maven, you can just add it as a dependency:
   <dependency>
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.0</version>
+    <version>1.9.2</version>
   </dependency>
 </dependencies>
 ```
@@ -489,3 +489,8 @@ Refer also to the library's javadocs for more detailed usage information!
 - v1.9.1 [2025-03-26]
   - Upgrade to `swing-extras` 1.9.1 to pick up changes there
   - `AppProperties.showPropertiesDialog` now returns whether user OK'd the dialog
+- v1.9.2 [2025-04-05]
+  - Upgrade to `swing-extras` 1.9.2 to pick up changes there
+  - https://github.com/scorbo2/app-extensions/issues/4 - add way to unregister extensions
+  - https://github.com/scorbo2/app-extensions/issues/6 - small change to extension loading
+  - https://github.com/scorbo2/app-extensions/issues/8 - update the way we handle properties

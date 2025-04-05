@@ -97,6 +97,25 @@ public class ExtensionManagerTest {
         assertEquals(0, extManager.getAllEnabledExtensionProperties().size()); // shouldn't change
     }
 
+    @Test
+    public void testUnloadExtension() {
+        extManager.addExtension(ext1, true);
+        extManager.addExtension(ext2, true);
+        assertTrue(extManager.unloadExtension(ext1.getClass().getName()));
+        assertFalse(extManager.unloadExtension(ext1.getClass().getName())); // shouldn't remove twice
+        assertEquals(1, extManager.getAllLoadedExtensions().size());
+        assertTrue(extManager.unloadExtension(ext2.getClass().getName()));
+        assertEquals(0, extManager.getAllLoadedExtensions().size());
+    }
+
+    @Test
+    public void testUnloadAllExtensions() {
+        extManager.addExtension(ext1, true);
+        extManager.addExtension(ext2, true);
+        assertEquals(2, extManager.unloadAllExtensions());
+        assertEquals(0, extManager.getAllLoadedExtensions().size());
+    }
+
     public static class AppExtensionImpl1 implements AppExtension {
 
         private final String name;
