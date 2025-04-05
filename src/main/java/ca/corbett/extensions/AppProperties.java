@@ -45,7 +45,7 @@ public abstract class AppProperties<T extends AppExtension> {
 
     private static final Logger logger = Logger.getLogger(AppProperties.class.getName());
 
-    protected final PropertiesManager propsManager;
+    protected PropertiesManager propsManager;
     protected final ExtensionManager<T> extManager;
 
     private final String appName;
@@ -63,7 +63,7 @@ public abstract class AppProperties<T extends AppExtension> {
         this.appName = appName;
         this.propsFile = propsFile;
         this.extManager = extManager;
-        propsManager = createPropertiesManager();
+        reinitialize();
     }
 
     /**
@@ -105,6 +105,16 @@ public abstract class AppProperties<T extends AppExtension> {
     public void save() {
         reconcileExtensionEnabledStatus();
         propsManager.save();
+    }
+
+    /**
+     * Allows direct access to the underlying PropertiesManager, in case you need to interact
+     * directly with it (for example, to invoke generateUnrenderedFormPanels()).
+     *
+     * @return The underlying PropertiesManager instance.
+     */
+    public PropertiesManager getPropertiesManager() {
+        return propsManager;
     }
 
     /**
@@ -205,11 +215,34 @@ public abstract class AppProperties<T extends AppExtension> {
     protected abstract List<AbstractProperty> createInternalProperties();
 
     /**
-     * Invoked internally to create and configure our PropertiesManager instance.
+     * Reinitializes the underlying PropertiesManager instance from scratch. This means
+     * both invoking our abstract createInternalProperties() method and also interrogating
+     * our ExtensionManager to get a list of all extension-supplied properties. This method
+     * is invoked automatically on initial creation, but you can invoke it again later
+     * if you have manually added, removed, enabled, or disabled extensions, so that the
+     * list of properties is fully reinitialized to reflect the new state of things.
+     * <p>
+     *     For an example of why you might want to do this, consider an extension that
+     *     supplies a bunch of options, some of which may appear as selectable
+     *     options inside our own createInternalProperties(). For example, we have
+     *     a dropdown of available application themes, but we only have one or two
+     *     built-in themes. The list of additional themes is extension-supplied.
+     *     If we disable that extension at runtime, we want to regenerate our combo
+     *     box (which is created in createInternalProperties()) such that it no longer
+     *     shows the extension-supplied options. Similarly, when we re-enable that
+     *     extension later, we need to regenerate that combo box again so that the
+     *     list of extension-supplied themes once again appear as selectable options.
+     * </p>
+     * <p>
+     *     Basically, whenever the list of currently loaded and extensions changes,
+     *     it's a good idea to reinitialize() this class to reflect those changes.
+     *     (And, of course, to reload your UI, as there may be many other changes
+     *     throughout your app as a result of enabling or disabling extensions).
+     * </p>
      *
      * @return A configured PropertiesManager.
      */
-    private PropertiesManager createPropertiesManager() {
+    public void reinitialize() {
         List<AbstractProperty> props = new ArrayList<>(createInternalProperties());
 
         // The name of this method is misleading, because ALL extensions are enabled by default.
@@ -217,7 +250,7 @@ public abstract class AppProperties<T extends AppExtension> {
         // method can handling disabling extensions and hiding properties for those extensions.
         props.addAll(extManager.getAllEnabledExtensionProperties());
 
-        return new PropertiesManager(propsFile, props, appName + " application properties");
+        propsManager = new PropertiesManager(propsFile, props, appName + " application properties");
     }
 
     /**
