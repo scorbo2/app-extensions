@@ -132,7 +132,6 @@ public class ExtensionDetailsPanel extends JPanel {
         LabelField nameField = new LabelField(name);
         nameField.setFont(nameField.getFieldLabelFont().deriveFont(Font.BOLD, 16f));
         nameField.setMargins(0, 4, 6, 0, 0);
-        nameField.setExtraMargins(0, 0);
         formPanel.addFormField(nameField);
 
         formPanel.addFormField(new LabelField("Type:", extInfo == null ? "" : determineExtensionType()));

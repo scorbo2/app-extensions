@@ -6,7 +6,7 @@
 
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.3</version>
+    <version>1.9.4-SNAPSHOT</version>
 
     <name>app-extensions</name>
     <description>App Extensions - create dynamic extensions for Java applications</description>
@@ -44,7 +44,7 @@
         <dependency>
             <groupId>ca.corbett</groupId>
             <artifactId>swing-extras</artifactId>
-            <version>1.9.3</version>
+            <version>1.9.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -71,7 +71,7 @@
                     <checksums>all</checksums>
                     <centralBaseUrl>https://central.sonatype.com</centralBaseUrl>
                     <centralSnapshotsUrl>https://central.sonatype.com/repository/maven-snapshots/</centralSnapshotsUrl>
-                    <skipPublishing>false</skipPublishing>
+                    <skipPublishing>true</skipPublishing>
                 </configuration>
             </plugin>
             <plugin>

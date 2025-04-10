@@ -34,7 +34,7 @@ If you're using Maven, you can just add it as a dependency:
   <dependency>
     <groupId>ca.corbett</groupId>
     <artifactId>app-extensions</artifactId>
-    <version>1.9.3</version>
+    <version>1.9.4</version>
   </dependency>
 </dependencies>
 ```
@@ -496,4 +496,5 @@ Refer also to the library's javadocs for more detailed usage information!
   - https://github.com/scorbo2/app-extensions/issues/8 - update the way we handle properties
 - v1.9.3 [2025-04-05]
   - Upgrade to `swing-extras` 1.9.3 to pick up a bug fix there
-
+- v1.9.4 [2025-04-10]
+  - Upgrade to `swing-extras` 1.9.4 / `swing-forms` 1.9.1 for upstream changes
