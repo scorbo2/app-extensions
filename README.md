@@ -1,4 +1,12 @@
-# app-extensions
+# app-extensions has moved!
+
+The app-extensions library has been absorbed into [swing-extras](https://github.com/scorbo2/swing-extras) as
+of the `2.0.0` release. **Any changes or enhancements to app-extensions will NOT be backported to this
+repo!** Instead, all new development for app-extensions will be done in the `swing-extras` library.
+
+The below documentation is left here for historical reasons. Have a nice day!
+
+--------------------
 
 ## What is this?
 
